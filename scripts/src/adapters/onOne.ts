@@ -2,12 +2,12 @@
  * On One Dance Studio adapter — 3218 Adeline St, Oakland CA
  *
  * TODO: replace with live fetch from On One's booking page
- * (https://studioonone.com/schedule)
+ * (https://ononestudios.com/sign-up/)
  * by scraping their schedule widget or using their booking platform's API.
  */
 import type { StudioAdapter, NormalizedClass } from "../pipeline";
 
-const BOOKING_URL = "https://studioonone.com/schedule";
+const BOOKING_URL = "https://ononestudios.com/sign-up/";
 
 type RawClass = [
   instructorName: string,
@@ -64,7 +64,7 @@ export const onOneAdapter: StudioAdapter = {
 
   async fetchClasses(): Promise<NormalizedClass[]> {
     // TODO: replace with live fetch from On One's booking page
-    // const html = await fetch("https://studioonone.com/schedule").then(r => r.text());
+    // const html = await fetch("https://ononestudios.com/sign-up/").then(r => r.text());
     // return parseOnOneSchedule(html);
 
     return CLASSES_RAW.map(

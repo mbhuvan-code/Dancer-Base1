@@ -173,13 +173,11 @@ export default function Profile() {
                     </div>
                     <span className="text-xs text-muted-foreground">{past.attendeeCount} attended</span>
                   </div>
-                  {past.videoLinks && past.videoLinks.length > 0 && (
-                    <Button asChild variant="secondary" size="sm" className="rounded-full h-8 px-3 text-xs font-semibold bg-background border border-border hover:bg-secondary">
-                      <Link href={`/class/${past.classId}/videos`}>
-                        <Video className="w-3 h-3 mr-1.5" />Videos
-                      </Link>
-                    </Button>
-                  )}
+                  <Button asChild variant="secondary" size="sm" className="rounded-full h-8 px-3 text-xs font-semibold bg-background border border-border hover:bg-secondary">
+                    <Link href={`/class/${past.classId}/videos`}>
+                      <Video className="w-3 h-3 mr-1.5" />Videos
+                    </Link>
+                  </Button>
                 </div>
               </div>
             ))}

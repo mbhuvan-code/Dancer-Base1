@@ -2,12 +2,12 @@
  * Full Out Dance Studio adapter — 2325 3rd St, San Francisco CA
  *
  * TODO: replace with live fetch from Full Out's booking page
- * (https://fullout.dance/schedule)
+ * (https://www.fulloutstudios.com/schedule)
  * by scraping their schedule widget or using their booking platform's API.
  */
 import type { StudioAdapter, NormalizedClass } from "../pipeline";
 
-const BOOKING_URL = "https://fullout.dance/schedule";
+const BOOKING_URL = "https://www.fulloutstudios.com/schedule";
 
 type RawClass = [
   instructorName: string,
@@ -63,7 +63,7 @@ export const fullOutAdapter: StudioAdapter = {
 
   async fetchClasses(): Promise<NormalizedClass[]> {
     // TODO: replace with live fetch from Full Out's booking page
-    // const html = await fetch("https://fullout.dance/schedule").then(r => r.text());
+    // const html = await fetch("https://www.fulloutstudios.com/schedule").then(r => r.text());
     // return parseFullOutSchedule(html);
 
     return CLASSES_RAW.map(

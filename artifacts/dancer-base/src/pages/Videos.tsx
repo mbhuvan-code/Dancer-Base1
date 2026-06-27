@@ -28,8 +28,12 @@ export default function Videos() {
   if (!pastClass || !pastClass.videoLinks || pastClass.videoLinks.length === 0) {
     return (
       <DetailLayout title="Class Videos">
-        <div className="p-12 text-center text-muted-foreground">
-          No videos available for this class.
+        <div className="p-12 flex flex-col items-center text-center gap-3">
+          <div className="w-14 h-14 bg-secondary/50 rounded-full flex items-center justify-center">
+            <PlayCircle className="w-7 h-7 text-muted-foreground" />
+          </div>
+          <p className="font-medium text-foreground">No videos from this class yet</p>
+          <p className="text-sm text-muted-foreground">Videos will appear here once they're uploaded.</p>
         </div>
       </DetailLayout>
     );

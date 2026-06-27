@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "wouter";
-import { Bookmark, BookmarkCheck, MapPin, ExternalLink } from "lucide-react";
+import { Bookmark, BookmarkCheck, MapPin, ExternalLink, Check, X } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import type { DanceClass } from "@workspace/api-client-react";
 import { UserAvatar } from "./UserAvatar";
@@ -23,6 +23,9 @@ interface ClassCardProps {
 export function ClassCard({ danceClass, mode = "search" }: ClassCardProps) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const [confirmState, setConfirmState] = useState<"idle" | "pending" | "confirmed">(
+    danceClass.isBooked ? "confirmed" : "idle"
+  );
 
   const saveMutation = useSaveClass({
     mutation: {
@@ -58,10 +61,9 @@ export function ClassCard({ danceClass, mode = "search" }: ClassCardProps) {
         queryClient.invalidateQueries({ queryKey: getListBookingsQueryKey() });
         queryClient.invalidateQueries({ queryKey: getGetTrendingClassesQueryKey() });
         queryClient.invalidateQueries({ queryKey: getListClassesQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getListSavedQueryKey() });
       },
-      onError: () => {
-        // Booking errors are silent — user already left for the studio site
-      },
+      onError: () => {},
     },
   });
 
@@ -75,16 +77,21 @@ export function ClassCard({ danceClass, mode = "search" }: ClassCardProps) {
   };
 
   const handleBookNow = () => {
-    // Open the studio's booking page in a new tab
     const url = danceClass.bookingUrl || "#";
     window.open(url, "_blank", "noopener,noreferrer");
-    // Mark as attending in the app so it shows up in Upcoming
-    if (!danceClass.isBooked) {
-      bookMutation.mutate({ data: { classId: danceClass.id } });
-    }
+    setConfirmState("pending");
   };
 
-  const isBooked = danceClass.isBooked;
+  const handleConfirmYes = () => {
+    setConfirmState("confirmed");
+    bookMutation.mutate({ data: { classId: danceClass.id } });
+  };
+
+  const handleConfirmNo = () => {
+    setConfirmState("idle");
+  };
+
+  const isBooked = danceClass.isBooked || confirmState === "confirmed";
   const showSaveButton = mode !== "upcoming" && !isBooked;
 
   return (
@@ -146,17 +153,22 @@ export function ClassCard({ danceClass, mode = "search" }: ClassCardProps) {
             {danceClass.friendsAttending?.slice(0, 3).map((friend) => (
               <UserAvatar key={friend.id} src={friend.profilePic} name={friend.name} className="w-6 h-6 border-2 border-card" />
             ))}
+            {(danceClass.friendsAttending?.length ?? 0) > 3 && (
+              <div className="w-6 h-6 rounded-full bg-secondary border-2 border-card flex items-center justify-center text-[10px] font-semibold text-muted-foreground">
+                +{(danceClass.friendsAttending?.length ?? 0) - 3}
+              </div>
+            )}
           </div>
-          {danceClass.friendsAttending && danceClass.friendsAttending.length > 0 ? (
+          {danceClass.friendsAttending && danceClass.friendsAttending.length > 0 && (
             <span className="text-xs text-muted-foreground group-hover/friends:text-foreground transition-colors">
-              {danceClass.friendsAttending.length} friend{danceClass.friendsAttending.length !== 1 ? "s" : ""} going
+              {danceClass.friendsAttending.length > 3
+                ? `${danceClass.friendsAttending.length} friends going`
+                : `${danceClass.friendsAttending.length} friend${danceClass.friendsAttending.length !== 1 ? "s" : ""} going`}
             </span>
-          ) : (
-            <span className="text-xs text-muted-foreground">{danceClass.spotsRemaining} spots left</span>
           )}
         </Link>
 
-        {mode === "upcoming" ? (
+        {mode === "upcoming" || isBooked ? (
           <Button
             variant="outline"
             size="sm"
@@ -169,16 +181,32 @@ export function ClassCard({ danceClass, mode = "search" }: ClassCardProps) {
             <ExternalLink className="w-3.5 h-3.5" />
             Booking Site
           </Button>
-        ) : isBooked ? (
-          <Button disabled variant="secondary" size="sm" className="rounded-full font-medium opacity-60">
-            Attending
-          </Button>
+        ) : confirmState === "pending" ? (
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-muted-foreground mr-0.5">Did you sign up?</span>
+            <Button
+              size="sm"
+              variant="default"
+              className="rounded-full h-7 px-2.5 text-xs font-semibold gap-1"
+              onClick={handleConfirmYes}
+              disabled={bookMutation.isPending}
+            >
+              <Check className="w-3 h-3" />Yes
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="rounded-full h-7 px-2.5 text-xs font-semibold gap-1"
+              onClick={handleConfirmNo}
+            >
+              <X className="w-3 h-3" />No
+            </Button>
+          </div>
         ) : (
           <Button
             size="sm"
             className="rounded-full font-medium shadow-sm gap-1.5"
             onClick={handleBookNow}
-            disabled={bookMutation.isPending}
           >
             <ExternalLink className="w-3.5 h-3.5" />
             Book Now

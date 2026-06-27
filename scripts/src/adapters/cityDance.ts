@@ -5,12 +5,12 @@
  *   (60 Brady St and 1420 Harrison St, San Francisco CA)
  *
  * TODO: replace with live fetch from City Dance's Mindbody portal
- * (https://clients.mindbodyonline.com/classic/ws?studioid=6784)
+ * (https://www.citydancesf.com/)
  * by parsing the schedule page or hitting the Mindbody public API.
  */
 import type { StudioAdapter, NormalizedClass } from "../pipeline";
 
-const BOOKING_URL = "https://clients.mindbodyonline.com/classic/ws?studioid=6784";
+const BOOKING_URL = "https://www.citydancesf.com/";
 
 type RawClass = [
   instructorName: string,
@@ -95,7 +95,7 @@ export const cityDanceAdapter: StudioAdapter = {
 
   async fetchClasses(): Promise<NormalizedClass[]> {
     // TODO: replace with live fetch from City Dance's Mindbody portal
-    // const html = await fetch("https://clients.mindbodyonline.com/classic/ws?studioid=6784").then(r => r.text());
+    // const html = await fetch("https://www.citydancesf.com/").then(r => r.text());
     // return parseCityDanceSchedule(html);
 
     return CLASSES_RAW.map(

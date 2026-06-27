@@ -23,6 +23,7 @@ import Checkout from "@/pages/Checkout";
 import Receipt from "@/pages/Receipt";
 import Videos from "@/pages/Videos";
 import FriendsAttending from "@/pages/FriendsAttending";
+import AddFriends from "@/pages/AddFriends";
 import Onboarding from "@/pages/Onboarding";
 
 // ---------------------------------------------------------------------------
@@ -128,6 +129,9 @@ export function AppRouter() {
         </Route>
         <Route path="/friends-attending/:classId">
           {() => <Show when="signed-in"><FriendsAttending /></Show>}
+        </Route>
+        <Route path="/add-friends">
+          {() => <Show when="signed-in"><AddFriends /></Show>}
         </Route>
 
         <Route><Redirect to="/" /></Route>

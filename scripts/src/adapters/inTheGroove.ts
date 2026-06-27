@@ -2,12 +2,12 @@
  * In the Groove Studios adapter — 474 Valencia St, San Francisco CA
  *
  * TODO: replace with live fetch from In the Groove's booking page
- * (https://www.inthegroovestudios.com/schedule)
+ * (https://inthegroovestudios.org/class-schedule)
  * by scraping their schedule widget or using their booking platform's API.
  */
 import type { StudioAdapter, NormalizedClass } from "../pipeline";
 
-const BOOKING_URL = "https://www.inthegroovestudios.com/schedule";
+const BOOKING_URL = "https://inthegroovestudios.org/class-schedule";
 
 type RawClass = [
   instructorName: string,
@@ -60,7 +60,7 @@ export const inTheGrooveAdapter: StudioAdapter = {
 
   async fetchClasses(): Promise<NormalizedClass[]> {
     // TODO: replace with live fetch from In the Groove's booking page
-    // const html = await fetch("https://www.inthegroovestudios.com/schedule").then(r => r.text());
+    // const html = await fetch("https://inthegroovestudios.org/class-schedule").then(r => r.text());
     // return parseInTheGrooveSchedule(html);
 
     return CLASSES_RAW.map(

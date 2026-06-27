@@ -50,11 +50,6 @@ export default function Instructor() {
             {instructor.styles.join(" · ")}
           </p>
         )}
-        {instructor.bio && (
-          <p className="text-sm text-foreground/80 text-center max-w-sm">
-            {instructor.bio}
-          </p>
-        )}
       </div>
 
       <div className="p-4 space-y-4">
