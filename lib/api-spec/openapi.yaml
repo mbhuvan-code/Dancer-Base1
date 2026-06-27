@@ -1,0 +1,711 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.1.0
+  description: dancerBase API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: users
+    description: User profile operations
+  - name: classes
+    description: Dance class operations
+  - name: bookings
+    description: Class booking operations
+  - name: saved
+    description: Saved class operations
+  - name: feed
+    description: Social activity feed
+  - name: friends
+    description: Friend relationship operations
+  - name: instructors
+    description: Instructor profile operations
+  - name: studios
+    description: Studio profile operations
+  - name: pastClasses
+    description: Past attended classes
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /users/me:
+    get:
+      operationId: getMe
+      tags: [users]
+      summary: Get current user profile
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "401":
+          description: Unauthorized
+    patch:
+      operationId: updateMe
+      tags: [users]
+      summary: Update current user profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserProfileUpdate"
+      responses:
+        "200":
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+
+  /users/search:
+    get:
+      operationId: searchUsers
+      tags: [users]
+      summary: Search users to add as friends (excludes self and existing friends)
+      parameters:
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Matching users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserProfile"
+
+  /users/{userId}:
+    get:
+      operationId: getUser
+      tags: [users]
+      summary: Get a user's public profile
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+
+  /classes:
+    get:
+      operationId: listClasses
+      tags: [classes]
+      summary: List and search classes
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: city
+          in: query
+          schema:
+            type: string
+        - name: style
+          in: query
+          schema:
+            type: string
+        - name: level
+          in: query
+          schema:
+            type: string
+        - name: instructor
+          in: query
+          schema:
+            type: string
+        - name: dateFrom
+          in: query
+          schema:
+            type: string
+        - name: dateTo
+          in: query
+          schema:
+            type: string
+        - name: priceMin
+          in: query
+          schema:
+            type: number
+        - name: priceMax
+          in: query
+          schema:
+            type: number
+        - name: timeFrom
+          in: query
+          schema:
+            type: string
+        - name: timeTo
+          in: query
+          schema:
+            type: string
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [trending, date, price]
+      responses:
+        "200":
+          description: List of classes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DanceClass"
+
+  /classes/{classId}:
+    get:
+      operationId: getClass
+      tags: [classes]
+      summary: Get a single class
+      parameters:
+        - name: classId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Dance class
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DanceClass"
+
+  /classes/trending:
+    get:
+      operationId: getTrendingClasses
+      tags: [classes]
+      summary: Get trending classes (fewest spots remaining)
+      responses:
+        "200":
+          description: Trending classes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DanceClass"
+
+  /bookings:
+    get:
+      operationId: listBookings
+      tags: [bookings]
+      summary: Get current user's upcoming bookings
+      responses:
+        "200":
+          description: Upcoming booked classes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Booking"
+    post:
+      operationId: createBooking
+      tags: [bookings]
+      summary: Book a class
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BookingInput"
+      responses:
+        "201":
+          description: Booking created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+
+  /bookings/{bookingId}:
+    get:
+      operationId: getBooking
+      tags: [bookings]
+      summary: Get booking receipt
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Booking receipt
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+    delete:
+      operationId: cancelBooking
+      tags: [bookings]
+      summary: Cancel a booking
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Cancelled
+
+  /saved:
+    get:
+      operationId: listSaved
+      tags: [saved]
+      summary: Get current user's saved classes
+      responses:
+        "200":
+          description: Saved classes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DanceClass"
+
+  /saved/{classId}:
+    post:
+      operationId: saveClass
+      tags: [saved]
+      summary: Save a class
+      parameters:
+        - name: classId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Saved
+    delete:
+      operationId: unsaveClass
+      tags: [saved]
+      summary: Unsave a class
+      parameters:
+        - name: classId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Unsaved
+
+  /feed:
+    get:
+      operationId: getFeed
+      tags: [feed]
+      summary: Get social activity feed
+      responses:
+        "200":
+          description: Activity feed items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FeedItem"
+
+  /friends:
+    get:
+      operationId: listFriends
+      tags: [friends]
+      summary: List current user's friends
+      responses:
+        "200":
+          description: Friends list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserProfile"
+    post:
+      operationId: addFriend
+      tags: [friends]
+      summary: Add a friend by username
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FriendInput"
+      responses:
+        "200":
+          description: Friend added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+
+  /friends/{userId}:
+    delete:
+      operationId: removeFriend
+      tags: [friends]
+      summary: Remove a friend
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Removed
+
+  /instructors/{instructorId}:
+    get:
+      operationId: getInstructor
+      tags: [instructors]
+      summary: Get instructor profile
+      parameters:
+        - name: instructorId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Instructor profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Instructor"
+
+  /studios/{studioId}:
+    get:
+      operationId: getStudio
+      tags: [studios]
+      summary: Get studio profile
+      parameters:
+        - name: studioId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Studio profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Studio"
+
+  /past-classes:
+    get:
+      operationId: listPastClasses
+      tags: [pastClasses]
+      summary: Get current user's past attended classes
+      responses:
+        "200":
+          description: Past classes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PastClass"
+
+  /classes/{classId}/friends-attending:
+    get:
+      operationId: getFriendsAttending
+      tags: [classes]
+      summary: Get friends attending a class
+      parameters:
+        - name: classId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Friends attending
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserProfile"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: integer
+        clerkId:
+          type: ["string", "null"]
+        name:
+          type: string
+        username:
+          type: string
+        profilePic:
+          type: ["string", "null"]
+        classesAttended:
+          type: integer
+        badge:
+          type: string
+          enum: [Newcomer, Regular, Hustler, Legend]
+        createdAt:
+          type: string
+      required:
+        - id
+        - name
+        - username
+        - classesAttended
+        - badge
+
+    UserProfileUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        username:
+          type: string
+        profilePic:
+          type: string
+
+    Instructor:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        profilePic:
+          type: ["string", "null"]
+        bio:
+          type: ["string", "null"]
+        styles:
+          type: array
+          items:
+            type: string
+        upcomingClasses:
+          type: array
+          items:
+            $ref: "#/components/schemas/DanceClass"
+      required:
+        - id
+        - name
+
+    Studio:
+      type: object
+      properties:
+        id:
+          type: integer
+        displayName:
+          type: string
+        address:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        upcomingClasses:
+          type: array
+          items:
+            $ref: "#/components/schemas/DanceClass"
+      required:
+        - id
+        - displayName
+        - address
+        - city
+        - state
+
+    DanceClass:
+      type: object
+      properties:
+        id:
+          type: integer
+        instructorId:
+          type: integer
+        instructorName:
+          type: string
+        instructorPic:
+          type: ["string", "null"]
+        studioId:
+          type: integer
+        studioName:
+          type: string
+        studioAddress:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        date:
+          type: string
+        dayOfWeek:
+          type: string
+        startTime:
+          type: string
+        endTime:
+          type: string
+        price:
+          type: number
+        style:
+          type: string
+        level:
+          type: string
+        totalSpots:
+          type: integer
+        spotsRemaining:
+          type: integer
+        friendsAttending:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserProfile"
+        isBooked:
+          type: boolean
+        bookingId:
+          type: ["integer", "null"]
+        isSaved:
+          type: boolean
+        bookingUrl:
+          type: ["string", "null"]
+      required:
+        - id
+        - instructorId
+        - instructorName
+        - studioId
+        - studioName
+        - studioAddress
+        - city
+        - state
+        - date
+        - dayOfWeek
+        - startTime
+        - endTime
+        - price
+        - style
+        - level
+        - totalSpots
+        - spotsRemaining
+        - isBooked
+        - bookingId
+        - isSaved
+
+    Booking:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        classId:
+          type: integer
+        class:
+          $ref: "#/components/schemas/DanceClass"
+        bookedAt:
+          type: string
+        confirmationCode:
+          type: string
+      required:
+        - id
+        - userId
+        - classId
+        - bookedAt
+        - confirmationCode
+
+    BookingInput:
+      type: object
+      properties:
+        classId:
+          type: integer
+      required:
+        - classId
+
+    FeedItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+          enum: [booking, saved]
+        user:
+          $ref: "#/components/schemas/UserProfile"
+        class:
+          $ref: "#/components/schemas/DanceClass"
+        createdAt:
+          type: string
+      required:
+        - id
+        - type
+        - user
+        - class
+        - createdAt
+
+    FriendInput:
+      type: object
+      properties:
+        username:
+          type: string
+      required:
+        - username
+
+    PastClass:
+      type: object
+      properties:
+        id:
+          type: integer
+        classId:
+          type: integer
+        class:
+          $ref: "#/components/schemas/DanceClass"
+        songPlayed:
+          type: ["string", "null"]
+        videoLinks:
+          type: array
+          items:
+            type: string
+        attendees:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserProfile"
+        attendeeCount:
+          type: integer
+        attendedAt:
+          type: string
+      required:
+        - id
+        - classId
+        - attendeeCount
+        - attendedAt
