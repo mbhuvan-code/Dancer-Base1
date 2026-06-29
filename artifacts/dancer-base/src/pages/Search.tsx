@@ -15,6 +15,11 @@ export default function Search() {
   const [selectedCity, setSelectedCity] = useState<string | null>(null);
   const [selectedStyle, setSelectedStyle] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [hiddenIds, setHiddenIds] = useState<Set<number>>(new Set());
+
+  const handleBooked = (classId: number) => {
+    setHiddenIds(prev => new Set(prev).add(classId));
+  };
 
   const hasFilters = !!selectedCity || !!selectedStyle || !!searchQuery;
 
@@ -192,9 +197,26 @@ export default function Search() {
               <p className="text-sm text-muted-foreground">Try different filters or search terms.</p>
             </div>
           ) : (
-            classes?.map((danceClass) => (
-              <ClassCard key={danceClass.id} danceClass={danceClass} mode="search" />
-            ))
+            classes?.map((danceClass) => {
+              const isHiding = hiddenIds.has(danceClass.id);
+              return (
+                <div
+                  key={danceClass.id}
+                  style={{
+                    display: "grid",
+                    gridTemplateRows: isHiding ? "0fr" : "1fr",
+                    opacity: isHiding ? 0 : 1,
+                    transition: "grid-template-rows 0.4s ease, opacity 0.3s ease",
+                  }}
+                >
+                  <div style={{ overflow: "hidden" }}>
+                    <div className="pb-0">
+                      <ClassCard danceClass={danceClass} mode="search" onBooked={handleBooked} />
+                    </div>
+                  </div>
+                </div>
+              );
+            })
           )}
         </div>
       </div>

@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { getAuth } from "@clerk/express";
 import { db, usersTable, friendsTable, feedItemsTable, classesTable, instructorsTable, studiosTable } from "@workspace/db";
-import { eq, or, desc } from "drizzle-orm";
+import { eq, or, desc, SQL } from "drizzle-orm";
 import { getOrCreateUser, getBadge } from "../lib/userHelper";
 
 const router = Router();
@@ -15,7 +15,10 @@ router.get("/feed", async (req, res) => {
   const friendRows = await db.select({ friendId: friendsTable.friendId }).from(friendsTable).where(eq(friendsTable.userId, user.id));
   const friendIds = friendRows.map(r => r.friendId);
 
-  if (!friendIds.length) return res.json([]);
+  // When user has no friends yet, show all activity as a discovery feed
+  const whereClause: SQL | undefined = friendIds.length > 0
+    ? or(...friendIds.map(id => eq(feedItemsTable.userId, id)))
+    : undefined;
 
   const items = await db.select({
     feedItem: feedItemsTable,
@@ -28,7 +31,7 @@ router.get("/feed", async (req, res) => {
     .innerJoin(classesTable, eq(feedItemsTable.classId, classesTable.id))
     .innerJoin(instructorsTable, eq(classesTable.instructorId, instructorsTable.id))
     .innerJoin(studiosTable, eq(classesTable.studioId, studiosTable.id))
-    .where(or(...friendIds.map(id => eq(feedItemsTable.userId, id))))
+    .where(whereClause)
     .orderBy(desc(feedItemsTable.createdAt))
     .limit(50);
 
