@@ -39,6 +39,17 @@ app.use(cors({ credentials: true, origin: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Dev tunnels (e.g. GitHub Codespaces port forwarding) strip the
+// Authorization header. The frontend duplicates the Clerk token in
+// x-auth-token — restore it here so clerkMiddleware can authenticate.
+app.use((req, _res, next) => {
+  const fallbackToken = req.headers["x-auth-token"];
+  if (!req.headers.authorization && typeof fallbackToken === "string" && fallbackToken) {
+    req.headers.authorization = `Bearer ${fallbackToken}`;
+  }
+  next();
+});
+
 app.use(
   clerkMiddleware((req) => ({
     publishableKey: publishableKeyFromHost(

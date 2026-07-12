@@ -355,6 +355,10 @@ export async function customFetch<T = unknown>(
     const token = await _authTokenGetter();
     if (token) {
       headers.set("authorization", `Bearer ${token}`);
+      // Some dev tunnels (e.g. GitHub Codespaces port forwarding) strip the
+      // Authorization header. Duplicate the token in a custom header the
+      // tunnel passes through; the API restores it before auth runs.
+      headers.set("x-auth-token", token);
     }
   }
 
