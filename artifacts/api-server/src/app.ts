@@ -47,6 +47,19 @@ app.use((req, _res, next) => {
   if (!req.headers.authorization && typeof fallbackToken === "string" && fallbackToken) {
     req.headers.authorization = `Bearer ${fallbackToken}`;
   }
+  // Debug: show which auth inputs each API request carries
+  if (req.path.startsWith("/api/") && req.path !== "/api/healthz") {
+    logger.info(
+      {
+        path: req.path,
+        method: req.method,
+        hasAuthorization: Boolean(req.headers.authorization),
+        hasXAuthToken: Boolean(fallbackToken),
+        hasSessionCookie: Boolean(req.headers.cookie?.includes("__session")),
+      },
+      "auth inputs",
+    );
+  }
   next();
 });
 
@@ -56,6 +69,8 @@ app.use(
       getClerkProxyHost(req) ?? "",
       process.env.CLERK_PUBLISHABLE_KEY,
     ),
+    // Debug: prints the reason auth fails (expired, wrong instance, etc.)
+    debug: process.env.NODE_ENV !== "production",
   }))
 );
 

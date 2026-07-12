@@ -22,4 +22,12 @@ app.listen(port, (err) => {
   }
 
   logger.info({ port }, "Server listening");
+  // Debug: surface which Clerk instance this server verifies against
+  logger.info(
+    {
+      secretKeyPrefix: (process.env.CLERK_SECRET_KEY ?? "MISSING").slice(0, 15),
+      publishableKeyPrefix: (process.env.CLERK_PUBLISHABLE_KEY ?? "MISSING").slice(0, 25),
+    },
+    "Clerk config",
+  );
 });
