@@ -78,7 +78,8 @@ router.get("/classes/trending", async (req, res) => {
     .limit(30);
 
   const cards = await Promise.all(classes.map(r => buildClassCard(r.class, r.instructor, r.studio, user?.id)));
-  return res.json(cards);
+  // Booked classes live in the Classes tab, not in discovery
+  return res.json(cards.filter(c => !c.isBooked));
 });
 
 router.get("/classes", async (req, res) => {
@@ -120,7 +121,8 @@ router.get("/classes", async (req, res) => {
     .limit(50);
 
   const cards = await Promise.all(results.map(r => buildClassCard(r.class, r.instructor, r.studio, user?.id)));
-  return res.json(cards);
+  // Booked classes live in the Classes tab, not in discovery
+  return res.json(cards.filter(c => !c.isBooked));
 });
 
 router.get("/classes/:classId/friends-attending", async (req, res) => {

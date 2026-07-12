@@ -2,28 +2,9 @@ import { Router } from "express";
 import { getAuth } from "@clerk/express";
 import { db, usersTable, friendsTable } from "@workspace/db";
 import { eq, or, ilike, notInArray, and } from "drizzle-orm";
+import { getOrCreateUser, getBadge } from "../lib/userHelper";
 
 const router = Router();
-
-function getBadge(classesAttended: number): string {
-  if (classesAttended >= 40) return "Legend";
-  if (classesAttended >= 15) return "Hustler";
-  if (classesAttended >= 5) return "Regular";
-  return "Newcomer";
-}
-
-async function getOrCreateUser(clerkId: string) {
-  const existing = await db.select().from(usersTable).where(eq(usersTable.clerkId, clerkId)).limit(1);
-  if (existing.length > 0) return existing[0];
-  const created = await db.insert(usersTable).values({
-    clerkId,
-    name: "New Dancer",
-    username: `dancer_${clerkId.slice(-6)}`,
-    profilePic: null,
-    classesAttended: 0,
-  }).returning();
-  return created[0];
-}
 
 router.get("/users/me", async (req, res) => {
   const { userId: clerkId } = getAuth(req);

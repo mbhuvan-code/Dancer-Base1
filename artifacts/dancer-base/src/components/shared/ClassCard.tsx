@@ -29,14 +29,17 @@ export function ClassCard({ danceClass, mode = "search", onBooked }: ClassCardPr
     danceClass.isBooked ? "confirmed" : "idle"
   );
 
-  // After showing the confirmed animation, notify parent to remove card
+  // After showing the confirmed animation, notify parent to remove card,
+  // then refetch the discovery lists (server now excludes booked classes).
   useEffect(() => {
     if (confirmState !== "confirmed" || danceClass.isBooked) return;
     const timer = setTimeout(() => {
       onBooked?.(danceClass.id);
+      queryClient.invalidateQueries({ queryKey: getGetTrendingClassesQueryKey() });
+      queryClient.invalidateQueries({ queryKey: getListClassesQueryKey() });
     }, 1500);
     return () => clearTimeout(timer);
-  }, [confirmState, danceClass.id, danceClass.isBooked, onBooked]);
+  }, [confirmState, danceClass.id, danceClass.isBooked, onBooked, queryClient]);
 
   const saveMutation = useSaveClass({
     mutation: {
@@ -69,12 +72,15 @@ export function ClassCard({ danceClass, mode = "search", onBooked }: ClassCardPr
   const bookMutation = useCreateBooking({
     mutation: {
       onSuccess: () => {
+        // Discovery lists (trending/search) are invalidated after the
+        // confirmed animation completes — see the effect above.
         queryClient.invalidateQueries({ queryKey: getListBookingsQueryKey() });
-        queryClient.invalidateQueries({ queryKey: getGetTrendingClassesQueryKey() });
-        queryClient.invalidateQueries({ queryKey: getListClassesQueryKey() });
         queryClient.invalidateQueries({ queryKey: getListSavedQueryKey() });
       },
-      onError: () => {},
+      onError: () => {
+        toast({ title: "Couldn't record booking", description: "Please try again.", variant: "destructive" });
+        setConfirmState("idle");
+      },
     },
   });
 

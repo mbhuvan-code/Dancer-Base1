@@ -4,7 +4,7 @@ import { UserAvatar } from "@/components/shared/UserAvatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Settings, Music, Video, X, LogOut, Camera } from "lucide-react";
+import { Settings, Music, Video, X, LogOut, Camera, Lock, Sparkles, Star, Flame, Crown } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { Link } from "wouter";
 import { useClerk } from "@clerk/react";
@@ -12,6 +12,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useQueryClient } from "@tanstack/react-query";
 import { getGetMeQueryKey } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
+
+const BADGE_TIERS = [
+  { name: "Newcomer", min: 0, icon: Sparkles, description: "Attended their first class" },
+  { name: "Regular", min: 10, icon: Star, description: "10 classes attended" },
+  { name: "Hustler", min: 25, icon: Flame, description: "25 classes attended" },
+  { name: "Legend", min: 50, icon: Crown, description: "50 classes attended" },
+];
 
 function compressImage(file: File, maxSize = 256, quality = 0.8): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -44,6 +51,7 @@ export default function Profile() {
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [showSettings, setShowSettings] = useState(false);
+  const [showBadges, setShowBadges] = useState(false);
   const [editName, setEditName] = useState("");
   const [editUsername, setEditUsername] = useState("");
   const [editPic, setEditPic] = useState("");
@@ -120,12 +128,19 @@ export default function Profile() {
         ) : user ? (
           <div className="flex flex-col items-center text-center">
             <UserAvatar src={user.profilePic} name={user.name} className="w-24 h-24 text-2xl border-4 border-background shadow-sm mb-4" />
+            <button
+              onClick={() => setShowBadges(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-semibold mb-2 hover:bg-primary/20 transition-colors"
+            >
+              {(() => {
+                const tier = BADGE_TIERS.filter(t => (user.classesAttended ?? 0) >= t.min).pop() ?? BADGE_TIERS[0];
+                const Icon = tier.icon;
+                return <><Icon className="w-3.5 h-3.5" />{tier.name}</>;
+              })()}
+            </button>
             <h1 className="text-2xl font-bold text-foreground leading-tight">{user.name}</h1>
             <p className="text-muted-foreground font-medium mb-3">@{user.username}</p>
-            <div className="inline-flex items-center px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-semibold">
-              {user.badge}
-            </div>
-            <div className="flex items-center gap-6 mt-6 pt-6 border-t border-border w-full justify-center">
+            <div className="flex items-center gap-6 mt-3 pt-6 border-t border-border w-full justify-center">
               <div className="flex flex-col items-center">
                 <span className="text-xl font-bold text-foreground">{user.classesAttended}</span>
                 <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Classes</span>
@@ -184,6 +199,75 @@ export default function Profile() {
           </div>
         )}
       </div>
+
+      {/* Badges popup */}
+      {showBadges && user && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setShowBadges(false)} />
+          <div className="relative w-full max-w-[430px] bg-background rounded-t-3xl p-6 space-y-4 max-h-[85dvh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-1">
+              <h2 className="text-lg font-bold">Badges</h2>
+              <button onClick={() => setShowBadges(false)} className="text-muted-foreground hover:text-foreground">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <p className="text-sm text-muted-foreground -mt-2">
+              Earn badges by attending classes. You've attended <span className="font-semibold text-foreground">{user.classesAttended}</span>.
+            </p>
+
+            <div className="space-y-3">
+              {BADGE_TIERS.map((tier, i) => {
+                const earned = (user.classesAttended ?? 0) >= tier.min;
+                const isNext = !earned && BADGE_TIERS.findIndex(t => (user.classesAttended ?? 0) < t.min) === i;
+                const Icon = tier.icon;
+                return (
+                  <div
+                    key={tier.name}
+                    className={
+                      "flex items-center gap-4 p-4 rounded-2xl border transition-colors " +
+                      (earned
+                        ? "bg-primary/5 border-primary/20"
+                        : isNext
+                          ? "bg-card border-border opacity-70"
+                          : "bg-card border-border opacity-40")
+                    }
+                  >
+                    <div className={
+                      "relative w-12 h-12 rounded-full flex items-center justify-center shrink-0 " +
+                      (earned ? "bg-primary/15 text-primary" : "bg-secondary text-muted-foreground")
+                    }>
+                      <Icon className="w-6 h-6" />
+                      {!earned && (
+                        <div className="absolute inset-0 rounded-full bg-background/60 flex items-center justify-center">
+                          <Lock className="w-4 h-4 text-muted-foreground" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className={"font-bold " + (earned ? "text-foreground" : "text-muted-foreground")}>
+                        {tier.name}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {tier.min === 0 ? tier.description : `${tier.min} classes attended`}
+                      </p>
+                    </div>
+                    {earned && (
+                      <span className="text-xs font-semibold text-primary bg-primary/10 border border-primary/20 px-2.5 py-1 rounded-full shrink-0">
+                        Earned
+                      </span>
+                    )}
+                    {isNext && (
+                      <span className="text-xs font-semibold text-muted-foreground bg-secondary px-2.5 py-1 rounded-full shrink-0">
+                        {tier.min - (user.classesAttended ?? 0)} to go
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Edit profile bottom sheet */}
       {showSettings && (
